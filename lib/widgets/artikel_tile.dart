@@ -5,14 +5,13 @@ import '../screens/detail_screen.dart';
 class ArtikelTile extends StatelessWidget {
   final Artikel artikel;
 
-  ArtikelTile({required this.artikel});
+  const ArtikelTile({Key? key, required this.artikel}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(artikel.title),
-      subtitle: Text(artikel.publicationInfo),
-      trailing: Icon(Icons.arrow_forward),
+      subtitle: Text(artikel.author),
       onTap: () {
         Navigator.push(
           context,

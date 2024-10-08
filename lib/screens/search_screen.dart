@@ -1,73 +1,51 @@
 import 'package:flutter/material.dart';
+import '../models/artikel.dart';
 import '../services/serpapi_service.dart';
 import '../widgets/artikel_tile.dart';
-import '../models/artikel.dart';
 
 class SearchScreen extends StatefulWidget {
+  const SearchScreen({Key? key}) : super(key: key);
+
   @override
   _SearchScreenState createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  List<Artikel> _artikelList = [];
-  bool _isLoading = false;
+  final TextEditingController _controller = TextEditingController();
+  List<Artikel> _results = [];
 
-  final SerpApiService _serpApiService = SerpApiService();
-
-  void _searchArtikel(String query) async {
+  void _searchArticles() async {
+    final articles = await SerpApiService.searchArticles(_controller.text);
     setState(() {
-      _isLoading = true;
+      _results = articles;
     });
-
-    try {
-      List<Artikel> artikelList = await _serpApiService.fetchArtikel(query);
-      setState(() {
-        _artikelList = artikelList;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching articles: $e')),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pencarian Artikel'),
+        title: const Text('Search Articles'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Masukkan kata kunci',
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.search),
-                  onPressed: () {
-                    _searchArtikel(_searchController.text);
-                  },
-                ),
+              controller: _controller,
+              decoration: const InputDecoration(
+                hintText: 'Enter search term...',
               ),
+              onSubmitted: (_) => _searchArticles(),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Expanded(
-              child: _isLoading
-                  ? Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      itemCount: _artikelList.length,
-                      itemBuilder: (context, index) {
-                        return ArtikelTile(artikel: _artikelList[index]);
-                      },
-                    ),
+              child: ListView.builder(
+                itemCount: _results.length,
+                itemBuilder: (context, index) {
+                  return ArtikelTile(artikel: _results[index]);
+                },
+              ),
             ),
           ],
         ),

@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import 'screens/search_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Pencarian Artikel Ilmiah',
+      title: 'Article Search',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: SearchScreen(),
+      home: const SearchScreen(),
     );
   }
 }
