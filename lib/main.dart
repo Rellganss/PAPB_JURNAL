@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'screens/search_screen.dart';
+import 'screens/search_screen.dart'; // Import the main search screen
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Article Search',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const SearchScreen(),
+      title: 'Search Articles',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const CombinedSearchScreen(), // Start with the SearchScreen
     );
   }
 }
