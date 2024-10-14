@@ -26,6 +26,7 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
   bool _isLoading = false;
   bool _isLoadingMore = false;
   bool _isAdvancedSearchVisible = false;
+  bool _hasSearched = false;
   int _currentPage = 1;
 
   String _wordsOccur = 'anywhere';
@@ -60,6 +61,7 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
       } else {
         _isLoading = true;
         _results.clear(); // Clear results for a new search
+        _hasSearched = true;
       }
     });
 
@@ -117,29 +119,46 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search Articles'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: _searchArticles,
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            _buildSearchBar(),
-            if (_isAdvancedSearchVisible) ...[
-              const SizedBox(height: 16),
-              _buildAdvancedSearchOptions(),
-            ],
-            const SizedBox(height: 16),
-            Expanded(child: _buildResultList()),
-          ],
+      title: const Text(
+        'Paper Finder',
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
         ),
       ),
+      centerTitle: true,
+    ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              if (!_hasSearched) _buildLogoAndName(),
+              const SizedBox(height: 16),
+              _buildSearchBar(),
+              const SizedBox(height: 16),
+              if (_isAdvancedSearchVisible) _buildAdvancedSearchOptions(),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.7,
+                child: _buildResultList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoAndName() {
+    return Column(
+      children: [
+        Image.asset(
+          'images/ic_launcher_monochrome.png', // Replace with the path to your app logo
+          height: 100,
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
@@ -240,18 +259,7 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     } else if (_results.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/images/ic_launcher_monochrome.png', // Replace with the path to your app logo
-              height: 100,
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      );
+      return const SizedBox.shrink();
     } else {
       return ListView.builder(
         controller: _scrollController,
