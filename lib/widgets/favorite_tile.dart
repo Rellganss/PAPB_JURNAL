@@ -1,8 +1,9 @@
-import 'package:app_papb/screens/detail_screen.dart';
+// lib/widgets/favorite_tile.dart
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/artikel.dart';
-
+import '../screens/detail_screen.dart';
 
 class FavoriteTile extends StatelessWidget {
   final Artikel artikel;
@@ -25,7 +26,9 @@ class FavoriteTile extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => DetailScreen(artikel: artikel),
             ),
-          );
+          ).then((_) {
+            // Refresh jika diperlukan setelah kembali dari DetailScreen
+          });
         },
         child: ListTile(
           title: Text(

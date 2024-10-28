@@ -1,10 +1,10 @@
+// lib/screens/combined_search_screen.dart
+
 import 'package:app_papb/screens/favorite_screen.dart';
 import 'package:flutter/material.dart';
 import '../models/artikel.dart';
 import '../services/serpapi_service.dart';
 import '../widgets/artikel_tile.dart';
-
-
 
 class CombinedSearchScreen extends StatefulWidget {
   const CombinedSearchScreen({super.key});
@@ -26,6 +26,7 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    // Tidak perlu memuat favorit di sini karena FavoriteService sudah di-load di main.dart
   }
 
   @override
@@ -37,6 +38,11 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
 
   Future<void> _searchArticles({bool isLoadMore = false}) async {
     if (_isLoading || _isLoadingMore) return;
+
+    if (_searchController.text.isEmpty) {
+      _showErrorDialog('Please enter a search term.');
+      return;
+    }
 
     setState(() {
       if (isLoadMore) {
@@ -114,7 +120,11 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const FavoritesScreen()),
-              );
+              ).then((_) {
+                setState(() {
+                  // Refresh search results setelah kembali dari FavoritesScreen
+                });
+              });
             },
           ),
         ],
@@ -146,7 +156,7 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
     return Column(
       children: [
         Image.asset(
-          'images/ic_launcher_monochrome.png', // Replace with the path to your app logo
+          'images/ic_launcher_monochrome.png', // Ganti dengan path logo aplikasi kamu
           height: 100,
         ),
         const SizedBox(height: 16),
@@ -202,7 +212,9 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
         });
       },
       child: Text(
-        _isAdvancedSearchVisible ? 'Hide Advanced Search' : 'Show Advanced Search',
+        _isAdvancedSearchVisible
+            ? 'Hide Advanced Search'
+            : 'Show Advanced Search',
         style: const TextStyle(color: Colors.blue),
       ),
     );
@@ -212,10 +224,10 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildAdvancedSearchField('with all of the words'),
-        _buildAdvancedSearchField('with the exact phrase'),
-        _buildAdvancedSearchField('with at least one of the words'),
-        _buildAdvancedSearchField('without the words'),
+        _buildAdvancedSearchField('With all of the words'),
+        _buildAdvancedSearchField('With the exact phrase'),
+        _buildAdvancedSearchField('With at least one of the words'),
+        _buildAdvancedSearchField('Without the words'),
         _buildAdvancedSearchField('Return articles authored by'),
         _buildAdvancedSearchField('Return articles published in'),
       ],
@@ -238,8 +250,10 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     } else if (_results.isEmpty && _searchController.text.isNotEmpty) {
-      // Show 'No results found' only after a search has been made
+      // Tampilkan 'No results found' hanya setelah pencarian dilakukan
       return const Center(child: Text('No results found.'));
+    } else if (_results.isEmpty) {
+      return const Center(child: Text('Start searching for articles.'));
     } else {
       return ListView.builder(
         controller: _scrollController,
@@ -259,5 +273,4 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
       );
     }
   }
-
 }

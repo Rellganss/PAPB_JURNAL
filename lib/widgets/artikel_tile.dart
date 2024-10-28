@@ -1,3 +1,5 @@
+// lib/widgets/artikel_tile.dart
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/artikel.dart';
@@ -25,7 +27,9 @@ class ArtikelTile extends StatelessWidget {
             MaterialPageRoute(
               builder: (context) => DetailScreen(artikel: artikel),
             ),
-          );
+          ).then((_) {
+            // Refresh state jika diperlukan setelah kembali dari DetailScreen
+          });
         },
         child: ListTile(
           // Menghapus CircleAvatar dan angka urut di sini
@@ -72,7 +76,8 @@ class ArtikelTile extends StatelessWidget {
           trailing: artikel.resources.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                  onPressed: () => _launchURL(artikel.resources.first.link),
+                  onPressed: () =>
+                      _launchURL(artikel.resources.first.link),
                 )
               : null,
         ),

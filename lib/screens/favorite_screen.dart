@@ -1,7 +1,9 @@
-import 'package:app_papb/widgets/favorite_tile.dart';
+// lib/screens/favorites_screen.dart
+
 import 'package:flutter/material.dart';
 import '../services/favorite_service.dart';
 import '../models/artikel.dart';
+import '../widgets/favorite_tile.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -12,6 +14,7 @@ class FavoritesScreen extends StatefulWidget {
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
   List<Artikel> _favorites = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -23,6 +26,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final favorites = await FavoriteService.getFavorites();
     setState(() {
       _favorites = favorites;
+      _isLoading = false;
     });
   }
 
@@ -32,24 +36,28 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       appBar: AppBar(
         title: const Text('Favorites'),
       ),
-      body: _favorites.isEmpty
-          ? const Center(child: Text('No favorites yet.'))
-          : ListView.builder(
-              itemCount: _favorites.length,
-              itemBuilder: (context, index) {
-                final artikel = _favorites[index];
-                return FavoriteTile(
-                  artikel: artikel,
-                  onRemove: () async {
-                    FavoriteService.removeFavorite(artikel);
-                    _loadFavorites(); // Refresh list
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${artikel.title} removed from favorites!')),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _favorites.isEmpty
+              ? const Center(child: Text('No favorites yet.'))
+              : ListView.builder(
+                  itemCount: _favorites.length,
+                  itemBuilder: (context, index) {
+                    final artikel = _favorites[index];
+                    return FavoriteTile(
+                      artikel: artikel,
+                      onRemove: () async {
+                        await FavoriteService.removeFavorite(artikel);
+                        _loadFavorites(); // Refresh list
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  '${artikel.title} removed from favorites!')),
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
+                ),
     );
   }
 }

@@ -1,7 +1,12 @@
-import 'package:flutter/material.dart';
-import 'screens/combined_search_screen.dart'; // Import the main search screen
+// lib/main.dart
 
-void main() {
+import 'package:flutter/material.dart';
+import 'screens/combined_search_screen.dart';
+import 'services/favorite_service.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await FavoriteService.loadFavorites(); // Pastikan favorit dimuat sebelum aplikasi berjalan
   runApp(const MyApp());
 }
 
@@ -13,7 +18,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Search Articles',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const CombinedSearchScreen(), // Start with the SearchScreen
+      home: const CombinedSearchScreen(), // Mulai dengan CombinedSearchScreen
     );
   }
 }

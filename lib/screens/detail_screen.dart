@@ -5,52 +5,74 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/artikel.dart';
 import '../services/favorite_service.dart';
 
-class DetailScreen extends StatelessWidget {
+class DetailScreen extends StatefulWidget {
   final Artikel artikel;
 
   const DetailScreen({super.key, required this.artikel});
 
   @override
-  Widget build(BuildContext context) {
-    // Periksa apakah artikel ini sudah ditandai sebagai favorit
-    bool isFavorited = FavoriteService.getFavorites().any((favorite) => favorite.title == artikel.title);
+  _DetailScreenState createState() => _DetailScreenState();
+}
 
+class _DetailScreenState extends State<DetailScreen> {
+  bool isFavorited = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfFavorited();
+  }
+
+  Future<void> _checkIfFavorited() async {
+    final favorites = await FavoriteService.getFavorites();
+    setState(() {
+      isFavorited =
+          favorites.any((favorite) => favorite.title == widget.artikel.title);
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (isFavorited) {
+      await FavoriteService.removeFavorite(widget.artikel);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Removed from favorites!')),
+      );
+    } else {
+      await FavoriteService.addFavorite(widget.artikel);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Added to favorites!')),
+      );
+    }
+    // Perbarui status favorit
+    await _checkIfFavorited();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Hero(
-          tag: 'Articel or Journal',
+          tag: 'Article or Journal',
           child: Material(
             color: Colors.transparent,
             child: Text(
-              artikel.title,
+              widget.artikel.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style:
+                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
         ),
         actions: [
           IconButton(
-            icon: Icon(
-              isFavorited ? Icons.favorite : Icons.favorite_border,
-              color: isFavorited ? Colors.red : null,
-            ),
-            onPressed: () {
-              if (isFavorited) {
-                // Menghapus dari daftar favorit
-                FavoriteService.removeFavorite(artikel);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Removed from favorites!')),
-                );
-              } else {
-                // Menambahkan ke daftar favorit
-                FavoriteService.addFavorite(artikel);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Added to favorites!')),
-                );
-              }
-            },
+            icon: isFavorited
+                ? const Icon(Icons.favorite, color: Colors.red)
+                : const Icon(Icons.favorite_border),
+            onPressed: _isLoading ? null : _toggleFavorite,
           ),
         ],
       ),
@@ -72,30 +94,28 @@ class DetailScreen extends StatelessWidget {
     );
   }
 
-  // Bagian untuk menampilkan judul, penulis, dan ringkasan publikasi
   Widget _buildTitleSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          artikel.title,
+          widget.artikel.title,
           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
-          _formatAuthors(artikel.authors),
+          _formatAuthors(widget.artikel.authors),
           style: const TextStyle(fontSize: 16, color: Colors.grey),
         ),
         const SizedBox(height: 8),
         Text(
-          artikel.publicationSummary,
+          widget.artikel.publicationSummary,
           style: const TextStyle(fontSize: 14, color: Colors.grey),
         ),
       ],
     );
   }
 
-  // Bagian untuk menampilkan snippet/abstrak
   Widget _buildSnippetSection() {
     return Card(
       elevation: 2.0,
@@ -111,7 +131,7 @@ class DetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              artikel.snippet,
+              widget.artikel.snippet,
               style: const TextStyle(fontSize: 16, height: 1.5),
             ),
           ],
@@ -127,35 +147,35 @@ class DetailScreen extends StatelessWidget {
         // Tombol View at Source
         Expanded(
           child: ElevatedButton(
-            onPressed: () => _launchURL(context, artikel.link),
+            onPressed: () => _launchURL(context, widget.artikel.link),
             child: const Text('View at Source'),
           ),
         ),
         const SizedBox(width: 8), // Spasi antar tombol
         // Tombol PDF (jika ada resources)
-        if (artikel.resources.isNotEmpty)
+        if (widget.artikel.resources.isNotEmpty)
           Expanded(
             child: ElevatedButton(
-              onPressed: () => _launchURL(context, artikel.resources.first.link),
-              child: Text('[PDF] ${artikel.resources.first.title}'),
+              onPressed: () =>
+                  _launchURL(context, widget.artikel.resources.first.link),
+              child: Text('[PDF] ${widget.artikel.resources.first.title}'),
             ),
           ),
       ],
     );
   }
 
-
-  // Bagian untuk menampilkan metadata (Citations, Related Articles, Versions)
   Widget _buildMetadataSection(BuildContext context) {
     return Column(
       children: [
         ListTile(
           leading: const Icon(Icons.library_books),
-          title: Text('Cited by ${artikel.citedBy}'), // Menggunakan jumlah sitasi yang sebenarnya
+          title: Text('Cited by ${widget.artikel.citedBy}'),
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _launchURL(
             context,
-            artikel.citedByLink ?? 'https://scholar.google.com/scholar?cites=${artikel.citedBy}', // Gunakan tautan sitasi jika tersedia
+            widget.artikel.citedByLink ??
+                'https://scholar.google.com/scholar?cites=${widget.artikel.citedBy}',
           ),
         ),
         ListTile(
@@ -164,7 +184,7 @@ class DetailScreen extends StatelessWidget {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _launchURL(
             context,
-            'https://scholar.google.com/scholar?q=related:${artikel.link}',
+            'https://scholar.google.com/scholar?q=related:${widget.artikel.link}',
           ),
         ),
         ListTile(
@@ -173,7 +193,7 @@ class DetailScreen extends StatelessWidget {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _launchURL(
             context,
-            'https://scholar.google.com/scholar?cluster=${artikel.link}',
+            'https://scholar.google.com/scholar?cluster=${widget.artikel.link}',
           ),
         ),
       ],
@@ -204,7 +224,8 @@ class DetailScreen extends StatelessWidget {
     }
 
     try {
-      final bool launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final bool launched =
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!launched) {
         _showErrorDialog(context, 'Could not launch the URL.');
       }

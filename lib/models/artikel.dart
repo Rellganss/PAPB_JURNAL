@@ -29,6 +29,7 @@ class Artikel {
     this.isFavorite = false, // Default tidak favorit
   });
 
+  // Factory method untuk membuat Artikel dari JSON
   factory Artikel.fromJson(Map<String, dynamic> json) {
     return Artikel(
       title: json['title'] ?? '',
@@ -37,13 +38,35 @@ class Artikel {
       publicationSummary: json['publication_info']?['summary'] ?? '',
       authors: (json['publication_info']?['authors'] as List<dynamic>?)
               ?.map((author) => author['name'].toString())
-              .toList() ?? [],
+              .toList() ??
+          [],
       resources: (json['resources'] as List<dynamic>?)
               ?.map((resource) => Resource.fromJson(resource))
-              .toList() ?? [],
+              .toList() ??
+          [],
       citedBy: json['inline_links']?['cited_by']?['total'] ?? 0,
       citedByLink: json['inline_links']?['cited_by']?['link'],
       relatedLink: json['inline_links']?['related_pages_link'],
+      isFavorite: json['isFavorite'] ?? false,
     );
+  }
+
+  // Method untuk mengubah Artikel menjadi JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'snippet': snippet,
+      'link': link,
+      'publication_info': {
+        'summary': publicationSummary,
+        'authors': authors.map((name) => {'name': name}).toList(),
+      },
+      'resources': resources.map((resource) => resource.toJson()).toList(),
+      'inline_links': {
+        'cited_by': {'total': citedBy, 'link': citedByLink},
+        'related_pages_link': relatedLink,
+      },
+      'isFavorite': isFavorite,
+    };
   }
 }
