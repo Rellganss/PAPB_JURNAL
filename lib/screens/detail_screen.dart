@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/artikel.dart';
 import '../services/favorite_service.dart';
+import '../screens/pdf_viewer.dart'; // Import PdfViewer
 
 class DetailScreen extends StatefulWidget {
   final Artikel artikel;
@@ -45,7 +46,6 @@ class _DetailScreenState extends State<DetailScreen> {
         const SnackBar(content: Text('Added to favorites!')),
       );
     }
-    // Perbarui status favorit
     await _checkIfFavorited();
   }
 
@@ -156,8 +156,15 @@ class _DetailScreenState extends State<DetailScreen> {
         if (widget.artikel.resources.isNotEmpty)
           Expanded(
             child: ElevatedButton(
-              onPressed: () =>
-                  _launchURL(context, widget.artikel.resources.first.link),
+              onPressed: () {
+                // Navigasi ke PdfViewer untuk menampilkan PDF
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PdfViewer(url: widget.artikel.resources.first.link),
+                  ),
+                );
+              },
               child: Text('[PDF] ${widget.artikel.resources.first.title}'),
             ),
           ),
@@ -174,8 +181,7 @@ class _DetailScreenState extends State<DetailScreen> {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _launchURL(
             context,
-            widget.artikel.citedByLink ??
-                'https://scholar.google.com/scholar?cites=${widget.artikel.citedBy}',
+            widget.artikel.citedByLink ?? 'https://scholar.google.com/scholar?cites=${widget.artikel.citedBy}',
           ),
         ),
         ListTile(
@@ -224,8 +230,7 @@ class _DetailScreenState extends State<DetailScreen> {
     }
 
     try {
-      final bool launched =
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final bool launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!launched) {
         _showErrorDialog(context, 'Could not launch the URL.');
       }
