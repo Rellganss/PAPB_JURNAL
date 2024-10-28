@@ -1,6 +1,9 @@
+// lib/screens/detail_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/artikel.dart';
+import '../services/favorite_service.dart';
 
 class DetailScreen extends StatelessWidget {
   final Artikel artikel;
@@ -9,11 +12,14 @@ class DetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Periksa apakah artikel ini sudah ditandai sebagai favorit
+    bool isFavorited = FavoriteService.getFavorites().any((favorite) => favorite.title == artikel.title);
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Hero(
-          tag: '${artikel.title}-${artikel.link}', // Unique Hero tag
+          tag: '${artikel.title}-${artikel.link}',
           child: Material(
             color: Colors.transparent,
             child: Text(
@@ -24,13 +30,35 @@ class DetailScreen extends StatelessWidget {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              isFavorited ? Icons.favorite : Icons.favorite_border,
+              color: isFavorited ? Colors.red : null,
+            ),
+            onPressed: () {
+              if (isFavorited) {
+                // Menghapus dari daftar favorit
+                FavoriteService.removeFavorite(artikel);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Removed from favorites!')),
+                );
+              } else {
+                // Menambahkan ke daftar favorit
+                FavoriteService.addFavorite(artikel);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Added to favorites!')),
+                );
+              }
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title and Authors Section
             _buildTitleSection(),
             const SizedBox(height: 16),
             _buildSnippetSection(),
@@ -44,25 +72,19 @@ class DetailScreen extends StatelessWidget {
     );
   }
 
-  // Section 1: Title, Authors, and Publication Info
+  // Bagian untuk menampilkan judul, penulis, dan ringkasan publikasi
   Widget _buildTitleSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           artikel.title,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
           _formatAuthors(artikel.authors),
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.grey,
-          ),
+          style: const TextStyle(fontSize: 16, color: Colors.grey),
         ),
         const SizedBox(height: 8),
         Text(
@@ -73,7 +95,7 @@ class DetailScreen extends StatelessWidget {
     );
   }
 
-  // Section 2: Snippet/Abstract Section
+  // Bagian untuk menampilkan snippet/abstrak
   Widget _buildSnippetSection() {
     return Card(
       elevation: 2.0,
@@ -85,10 +107,7 @@ class DetailScreen extends StatelessWidget {
           children: [
             const Text(
               'Abstract',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Text(
@@ -101,7 +120,7 @@ class DetailScreen extends StatelessWidget {
     );
   }
 
-  // Section 3: Links (View in Browser, PDF, etc.)
+  // Bagian untuk menampilkan tautan (View at Source, PDF, dll.)
   Widget _buildLinksSection(BuildContext context) {
     return Column(
       children: [
@@ -119,17 +138,17 @@ class DetailScreen extends StatelessWidget {
     );
   }
 
-  // Section 4: Metadata (Citations, Related Articles, Versions)
+  // Bagian untuk menampilkan metadata (Citations, Related Articles, Versions)
   Widget _buildMetadataSection(BuildContext context) {
     return Column(
       children: [
         ListTile(
           leading: const Icon(Icons.library_books),
-          title: const Text('Cited by ${1234}'), // Example data
+          title: Text('Cited by ${artikel.citedBy}'), // Menggunakan jumlah sitasi yang sebenarnya
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () => _launchURL(
             context,
-            'https://scholar.google.com/scholar?cites=${artikel.citedBy}',
+            artikel.citedByLink ?? 'https://scholar.google.com/scholar?cites=${artikel.citedBy}', // Gunakan tautan sitasi jika tersedia
           ),
         ),
         ListTile(
@@ -154,7 +173,7 @@ class DetailScreen extends StatelessWidget {
     );
   }
 
-  // Function to format authors list or show 'Unknown'
+  // Fungsi untuk memformat daftar penulis
   String _formatAuthors(List<String> authors) {
     if (authors.isEmpty) {
       return 'Author: Unknown';
@@ -163,7 +182,7 @@ class DetailScreen extends StatelessWidget {
     }
   }
 
-  // Function to open a URL with error handling
+  // Fungsi untuk membuka URL dengan penanganan kesalahan
   Future<void> _launchURL(BuildContext context, String url) async {
     if (url.isEmpty) {
       _showErrorDialog(context, 'URL is empty.');
@@ -187,7 +206,7 @@ class DetailScreen extends StatelessWidget {
     }
   }
 
-  // Function to display an error dialog
+  // Fungsi untuk menampilkan dialog kesalahan
   void _showErrorDialog(BuildContext context, String message) {
     showDialog(
       context: context,

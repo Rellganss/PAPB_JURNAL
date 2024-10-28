@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/search_screen.dart'; // Import the main search screen
+import 'screens/combined_search_screen.dart'; // Import the main search screen
 
 void main() {
   runApp(const MyApp());

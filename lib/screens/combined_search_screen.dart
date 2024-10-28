@@ -1,7 +1,10 @@
+import 'package:app_papb/screens/favorite_screen.dart';
 import 'package:flutter/material.dart';
 import '../models/artikel.dart';
 import '../services/serpapi_service.dart';
 import '../widgets/artikel_tile.dart';
+
+
 
 class CombinedSearchScreen extends StatefulWidget {
   const CombinedSearchScreen({super.key});
@@ -12,24 +15,12 @@ class CombinedSearchScreen extends StatefulWidget {
 
 class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _allWordsController = TextEditingController();
-  final TextEditingController _exactPhraseController = TextEditingController();
-  final TextEditingController _atLeastOneController = TextEditingController();
-  final TextEditingController _withoutWordsController = TextEditingController();
-  final TextEditingController _authorController = TextEditingController();
-  final TextEditingController _publishedInController = TextEditingController();
-  final TextEditingController _startYearController = TextEditingController();
-  final TextEditingController _endYearController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
   List<Artikel> _results = [];
   bool _isLoading = false;
   bool _isLoadingMore = false;
   bool _isAdvancedSearchVisible = false;
-  bool _hasSearched = false;
   int _currentPage = 1;
-
-  String _wordsOccur = 'anywhere';
 
   @override
   void initState() {
@@ -40,14 +31,6 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
   @override
   void dispose() {
     _searchController.dispose();
-    _allWordsController.dispose();
-    _exactPhraseController.dispose();
-    _atLeastOneController.dispose();
-    _withoutWordsController.dispose();
-    _authorController.dispose();
-    _publishedInController.dispose();
-    _startYearController.dispose();
-    _endYearController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -60,17 +43,14 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
         _isLoadingMore = true;
       } else {
         _isLoading = true;
-        _results.clear(); // Clear results for a new search
-        _hasSearched = true;
+        _results.clear();
+        _currentPage = 1;
       }
     });
 
     try {
       final articles = await SerpApiService.searchArticles(
         query: _searchController.text,
-        author: _authorController.text.isEmpty ? null : _authorController.text,
-        sortBy: 'relevance',
-        dateRange: null,
         page: _currentPage,
       );
 
@@ -119,26 +99,38 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-      title: const Text(
-        'Paper Finder',
-        style: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
+        title: const Text(
+          'Paper Finder',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FavoritesScreen()),
+              );
+            },
+          ),
+        ],
       ),
-      centerTitle: true,
-    ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              if (!_hasSearched) _buildLogoAndName(),
+              if (_results.isEmpty) _buildLogoAndName(),
               const SizedBox(height: 16),
               _buildSearchBar(),
               const SizedBox(height: 16),
               if (_isAdvancedSearchVisible) _buildAdvancedSearchOptions(),
               const SizedBox(height: 16),
+              _buildToggleAdvancedSearch(),
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.7,
                 child: _buildResultList(),
@@ -158,55 +150,61 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
           height: 100,
         ),
         const SizedBox(height: 16),
+        const Text(
+          'Find Scholarly Articles Easily',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
 
   Widget _buildSearchBar() {
-    return Column(
+    return Row(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Search for articles...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 12.0,
-                  ),
-                ),
-                textInputAction: TextInputAction.search,
-                onSubmitted: (_) => _searchArticles(),
+        Expanded(
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search for articles...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                borderSide: BorderSide.none,
+              ),
+              filled: true,
+              fillColor: Colors.grey[200],
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 12.0,
               ),
             ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: _searchArticles,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.all(14.0),
-                shape: const CircleBorder(),
-              ),
-              child: const Icon(Icons.search, size: 24),
-            ),
-          ],
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _searchArticles(),
+          ),
         ),
-        TextButton(
-          onPressed: () {
-            setState(() {
-              _isAdvancedSearchVisible = !_isAdvancedSearchVisible;
-            });
-          },
-          child: Text(_isAdvancedSearchVisible ? 'Hide Advanced Search' : 'Show Advanced Search'),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          onPressed: () => _searchArticles(),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.all(14.0),
+            shape: const CircleBorder(),
+          ),
+          child: const Icon(Icons.search, size: 24),
         ),
       ],
+    );
+  }
+
+  Widget _buildToggleAdvancedSearch() {
+    return TextButton(
+      onPressed: () {
+        setState(() {
+          _isAdvancedSearchVisible = !_isAdvancedSearchVisible;
+        });
+      },
+      child: Text(
+        _isAdvancedSearchVisible ? 'Hide Advanced Search' : 'Show Advanced Search',
+        style: const TextStyle(color: Colors.blue),
+      ),
     );
   }
 
@@ -214,52 +212,34 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildTextField(_allWordsController, 'with all of the words'),
-        const SizedBox(height: 16),
-        _buildTextField(_exactPhraseController, 'with the exact phrase'),
-        const SizedBox(height: 16),
-        _buildTextField(_atLeastOneController, 'with at least one of the words'),
-        const SizedBox(height: 16),
-        _buildTextField(_withoutWordsController, 'without the words'),
-        const SizedBox(height: 16),
-        _buildTextField(_authorController, 'Return articles authored by'),
-        const SizedBox(height: 16),
-        _buildTextField(_publishedInController, 'Return articles published in'),
-        const SizedBox(height: 16),
-        _buildDateRangeFields(),
+        _buildAdvancedSearchField('with all of the words'),
+        _buildAdvancedSearchField('with the exact phrase'),
+        _buildAdvancedSearchField('with at least one of the words'),
+        _buildAdvancedSearchField('without the words'),
+        _buildAdvancedSearchField('Return articles authored by'),
+        _buildAdvancedSearchField('Return articles published in'),
       ],
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
+  Widget _buildAdvancedSearchField(String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
       ),
-    );
-  }
-
-  Widget _buildDateRangeFields() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildTextField(_startYearController, 'Start Year'),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildTextField(_endYearController, 'End Year'),
-        ),
-      ],
     );
   }
 
   Widget _buildResultList() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
-    } else if (_results.isEmpty) {
-      return const SizedBox.shrink();
+    } else if (_results.isEmpty && _searchController.text.isNotEmpty) {
+      // Show 'No results found' only after a search has been made
+      return const Center(child: Text('No results found.'));
     } else {
       return ListView.builder(
         controller: _scrollController,
@@ -279,4 +259,5 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
       );
     }
   }
+
 }
