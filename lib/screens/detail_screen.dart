@@ -19,7 +19,7 @@ class DetailScreen extends StatelessWidget {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Hero(
-          tag: '${artikel.title}-${artikel.link}',
+          tag: 'Articel or Journal',
           child: Material(
             color: Colors.transparent,
             child: Text(
@@ -120,23 +120,30 @@ class DetailScreen extends StatelessWidget {
     );
   }
 
-  // Bagian untuk menampilkan tautan (View at Source, PDF, dll.)
   Widget _buildLinksSection(BuildContext context) {
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        ElevatedButton(
-          onPressed: () => _launchURL(context, artikel.link),
-          child: const Text('View at Source'),
+        // Tombol View at Source
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () => _launchURL(context, artikel.link),
+            child: const Text('View at Source'),
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(width: 8), // Spasi antar tombol
+        // Tombol PDF (jika ada resources)
         if (artikel.resources.isNotEmpty)
-          ElevatedButton(
-            onPressed: () => _launchURL(context, artikel.resources.first.link),
-            child: Text('[PDF] ${artikel.resources.first.title}'),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => _launchURL(context, artikel.resources.first.link),
+              child: Text('[PDF] ${artikel.resources.first.title}'),
+            ),
           ),
       ],
     );
   }
+
 
   // Bagian untuk menampilkan metadata (Citations, Related Articles, Versions)
   Widget _buildMetadataSection(BuildContext context) {

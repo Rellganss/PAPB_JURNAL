@@ -1,56 +1,55 @@
-// lib/screens/favorites_screen.dart
-
+import 'package:app_papb/widgets/favorite_tile.dart';
 import 'package:flutter/material.dart';
 import '../services/favorite_service.dart';
 import '../models/artikel.dart';
-import 'detail_screen.dart';
 
-class FavoritesScreen extends StatelessWidget {
+class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final favorites = FavoriteService.getFavorites();
+  State<FavoritesScreen> createState() => _FavoritesScreenState();
+}
 
+class _FavoritesScreenState extends State<FavoritesScreen> {
+  List<Artikel> _favorites = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    final favorites = await FavoriteService.getFavorites();
+    setState(() {
+      _favorites = favorites;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Favorites'),
       ),
-      body: favorites.isEmpty
+      body: _favorites.isEmpty
           ? const Center(child: Text('No favorites yet.'))
           : ListView.builder(
-              itemCount: favorites.length,
+              itemCount: _favorites.length,
               itemBuilder: (context, index) {
-                final artikel = favorites[index]; // Menggunakan model Artikel langsung
-                return ListTile(
-                  title: Text(artikel.title),
-                  onTap: () {
-                    // Navigasi ke DetailScreen dengan data artikel yang sesuai
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DetailScreen(
-                          artikel: artikel, // Menggunakan objek Artikel
-                        ),
-                      ),
+                final artikel = _favorites[index];
+                return FavoriteTile(
+                  artikel: artikel,
+                  onRemove: () async {
+                    FavoriteService.removeFavorite(artikel);
+                    _loadFavorites(); // Refresh list
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${artikel.title} removed from favorites!')),
                     );
                   },
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      _removeFavorite(context, artikel);
-                    },
-                  ),
                 );
               },
             ),
-    );
-  }
-
-  void _removeFavorite(BuildContext context, Artikel artikel) {
-    FavoriteService.removeFavorite(artikel);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${artikel.title} removed from favorites!')),
     );
   }
 }
