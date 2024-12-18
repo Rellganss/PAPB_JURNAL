@@ -1,4 +1,4 @@
-package com.example.app_papb
+package com.refactor.paperfinder
 
 import io.flutter.embedding.android.FlutterActivity
 

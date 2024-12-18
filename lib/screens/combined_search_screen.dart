@@ -26,7 +26,6 @@ class _CombinedSearchScreenState extends State<CombinedSearchScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // Tidak perlu memuat favorit di sini karena FavoriteService sudah di-load di main.dart
   }
 
   @override

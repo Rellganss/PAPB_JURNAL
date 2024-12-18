@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/artikel.dart';
 
 class SerpApiService {
-  static const String _apiKey = 'bc956eb4c0aad6d5aa09871185cad6bfa4bec7b19d7e9f0510f6159d9372b11a';
+  static const String _apiKey = 'e294fd928b5c17d50487ebb59e3d52a371a112cd2c0e6a1dd7111d3f5f0dfd3e';
   static const String _baseUrl = 'https://serpapi.com/search.json';
 
   static Future<List<Artikel>> searchArticles({

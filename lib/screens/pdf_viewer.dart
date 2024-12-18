@@ -14,7 +14,7 @@ class PdfViewer extends StatelessWidget {
       appBar: AppBar(
         title: const Text('PDF Viewer'),
       ),
-      body: SfPdfViewer.network(url), // Menggunakan SfPdfViewer untuk menampilkan PDF
+      body: SfPdfViewer.network(url),
     );
   }
 }
